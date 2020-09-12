@@ -91,13 +91,10 @@ public class MaximizeExpression {
 
     private static long solution(final String expression) {
         // 피연산자 추출
-        final String[] operands = getOperands(expression);
+        final List<String> operands = new ArrayList<>(Arrays.asList(getOperands(expression)));
 
         // 연산자 추출
-        final String[] operators = getOperators(expression);
-
-        // 연산 처리 순서를 담은 스택 초기화
-        Stack<String> operationStack = getOperationStack(operands, operators);
+        final List<String> operators = new ArrayList<>(Arrays.asList(getOperators(expression)));
 
         // 연산자는 총 3개 -> 경우의 수는 3!, 즉 총 6가지
         // 연산자의 경우의 수별로 리스트 생성
@@ -105,61 +102,22 @@ public class MaximizeExpression {
         final List<String> tempOperators = new ArrayList<>();
         getOperationByCase(operationByCase, tempOperators);
 
+        // 반환할 결과값 초기화
         long answer = -1L;
 
         // 연산자 우선 순위 경우의 수만큼 반복
         for (List<String> opList : operationByCase) {
-            // 매번 복사본을 생성하여 연산을 꺼내면서 처리
-            Stack<String> copyOperationStack = (Stack<String>) operationStack.clone();
+            List<String> operatorList = new ArrayList<>(operators);
+            List<String> operandList = new ArrayList<>(operands);
 
-            // 뽑은 연산자
+            // 해당 연산자 연산 처리
             for (String op : opList) {
-                Stack<String> tempStack = new Stack<>();
-
-                // 연산 스택의 모든 요소 확인
-                while (!copyOperationStack.isEmpty()) {
-                    // 연산 스택 복사본에서 요소를 추출
-                    String element = copyOperationStack.pop();
-
-                    // 해당 연산자를 찾았을 때 연산 처리 후 다시 삽입
-                    assert op != null;
-                    if (op.equalsIgnoreCase(element)) {
-                        String firstStr = tempStack.pop();
-                        System.out.println(firstStr);
-                        String secondStr = copyOperationStack.pop();
-                        System.out.println(secondStr);
-
-                        int firstOp = Integer.parseInt(firstStr);
-                        int secondOp = Integer.parseInt(secondStr);
-                        int temp;
-                        switch (op) {
-                            case "*":
-                                temp = firstOp * secondOp;
-                                break;
-                            case "+":
-                                temp = firstOp + secondOp;
-                                break;
-                            case "-":
-                                temp = firstOp - secondOp;
-                                break;
-                            default:
-                                temp = 0;
-                        }
-
-                        element = Integer.toString(temp);
-
-                    }
-                    tempStack.add(element);
-                }
-
-                // 임시 스택에 담아둔 요소를 원래 스택에 다시 담기
-                while (!tempStack.isEmpty()) {
-                    copyOperationStack.add(tempStack.pop());
-                }
+                computeExpression(operatorList, op, operandList);
             }
 
             // 그동안 나온 연산시 최댓값과 비교하여 더 큰 값을 삽입
-            answer = Math.max(answer, Math.abs(Integer.parseInt(copyOperationStack.pop())));
+            String result = operandList.get(0);
+            answer = Math.max(answer, Math.abs(Long.parseLong(result)));
         }
 
         return answer;
@@ -173,22 +131,6 @@ public class MaximizeExpression {
     private static String[] getOperators(final String expression) {
         // 주어진 문자열에서 피연산자를 제외한 연산자만 배열로 추출
         return expression.replaceAll("[0-9]", "").split("");
-    }
-
-    private static Stack<String> getOperationStack(final String[] operands, final String[] operators) {
-        Stack<String> operationStack = new Stack<>();
-
-        // 스택에서 꺼내서 연산을 처리할 것이기 때문에 기존 표현식을 거꾸로 삽입
-        int opCount = operators.length - 1;
-        operationStack.add(operands[operands.length - 1]);
-
-        while (opCount >= 0) {
-            operationStack.add(operators[opCount]);
-            operationStack.add(operands[opCount]);
-            opCount--;
-        }
-
-        return operationStack;
     }
 
     private static void getOperationByCase(final List<List<String>> operators, final List<String> current) {
@@ -212,6 +154,45 @@ public class MaximizeExpression {
             getOperationByCase(operators, current);
             // 마지막으로 삽입한 연산자 제거
             current.remove(current.size() - 1);
+        }
+    }
+
+    private static void computeExpression(final List<String> operatorList,
+                                          final String op, final List<String> operandList) {
+        // 연산자 목록에 해당 연산자가 없어질 때까지 반복
+        while (operatorList.contains(op)) {
+            // 연산자 목록만큼 반복하며 수행
+            final int operatorSize = operatorList.size();
+            for (int i = 0; i < operatorSize; i++) {
+                // 해당 연산자 일치 여부 확인
+                if (!operatorList.get(i).equalsIgnoreCase(op)) {
+                    continue;
+                }
+
+                // 해당 연산자와 계산할 피연산자 2개 추출
+                final String removeOp = operatorList.remove(i);
+                final long firstOp = Long.parseLong(operandList.remove(i));
+                final long secondOp = Long.parseLong(operandList.remove(i));
+
+                long result;
+                switch (removeOp) {
+                    case "*":
+                        result = firstOp * secondOp;
+                        break;
+                    case "+":
+                        result = firstOp + secondOp;
+                        break;
+                    case "-":
+                        result = firstOp - secondOp;
+                        break;
+                    default:
+                        result = 0;
+                }
+
+                // 연산결과로 나온 피연산자를 다시 피연산자 목록에 삽입
+                operandList.add(i, Long.toString(result));
+                break;
+            }
         }
     }
 }
