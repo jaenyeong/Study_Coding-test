@@ -1,4 +1,4 @@
-package com.jaenyeong.kakao.y2020.m09.question04;
+package com.jaenyeong.ch01_kakao.y2020.m09.question04;
 
 import java.util.Arrays;
 import java.util.LinkedList;

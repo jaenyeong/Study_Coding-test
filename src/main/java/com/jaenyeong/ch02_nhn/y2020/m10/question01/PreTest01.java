@@ -1,4 +1,4 @@
-package com.jaenyeong.nhn.y2020.m10.question01;
+package com.jaenyeong.ch02_nhn.y2020.m10.question01;
 
 import java.util.ArrayList;
 import java.util.Collections;
